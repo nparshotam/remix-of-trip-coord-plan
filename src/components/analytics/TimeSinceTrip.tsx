@@ -10,13 +10,16 @@ interface TimeSinceTripProps {
 
 const TRAVEL_TYPES: EventType[] = ["np-travel", "sw-travel", "together", "np-work", "sw-work"];
 
+const isWorldCupEvent = (event: CalendarEvent) => 
+  event.title.toLowerCase().includes("world cup");
+
 export const TimeSinceTrip = ({ events }: TimeSinceTripProps) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const travelEvents = useMemo(() => 
     events
-      .filter(e => TRAVEL_TYPES.includes(e.type))
+      .filter(e => TRAVEL_TYPES.includes(e.type) && !isWorldCupEvent(e))
       .sort((a, b) => a.date.localeCompare(b.date)),
     [events]
   );
