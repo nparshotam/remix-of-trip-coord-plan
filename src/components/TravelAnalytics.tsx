@@ -159,6 +159,8 @@ export const TravelAnalytics = ({ events }: TravelAnalyticsProps) => {
                     dataKey="value"
                     onClick={(_, index) => handlePieClick(pieData[index])}
                     className="cursor-pointer"
+                    label={({ name, value, trips }) => `${value}d / ${trips} trips`}
+                    labelLine={true}
                   >
                     {pieData.map((entry, index) => (
                       <Cell 
