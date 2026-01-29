@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CalendarEvent, EventType, EVENT_LABELS } from "@/types/calendar";
+import { CalendarEvent, EventType } from "@/types/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ interface TravelBalanceProps {
 }
 
 const TRAVEL_TYPES: EventType[] = ["np-travel", "sw-travel", "together", "np-work", "sw-work"];
+const NP_SOLO_TYPES: EventType[] = ["np-travel", "np-work"];
+const SW_SOLO_TYPES: EventType[] = ["sw-travel", "sw-work"];
 
 const isWorldCupEvent = (event: CalendarEvent) => 
   event.title.toLowerCase().includes("world cup");
@@ -23,37 +25,56 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
   const stats = useMemo(() => {
     const npPersonal = travelEvents.filter(e => e.type === "np-travel").length;
     const swPersonal = travelEvents.filter(e => e.type === "sw-travel").length;
-    const together = travelEvents.filter(e => e.type === "together").length;
+    const togetherTravel = travelEvents.filter(e => e.type === "together").length;
     const npWork = travelEvents.filter(e => e.type === "np-work").length;
     const swWork = travelEvents.filter(e => e.type === "sw-work").length;
 
     const npTotal = npPersonal + npWork;
     const swTotal = swPersonal + swWork;
-    const workTotal = npWork + swWork;
-    const personalTotal = npPersonal + swPersonal + together;
-    const totalDays = travelEvents.length;
-    
-    // Together time percentage
-    const togetherPct = totalDays > 0 ? Math.round((together / totalDays) * 100) : 0;
     
     // Work percentages for each person
     const npWorkPct = npTotal > 0 ? Math.round((npWork / npTotal) * 100) : 0;
     const swWorkPct = swTotal > 0 ? Math.round((swWork / swTotal) * 100) : 0;
 
+    // Calculate days apart (solo travel, not including "together" trips)
+    // Get unique dates for NP solo travel
+    const npSoloDates = new Set(
+      travelEvents
+        .filter(e => NP_SOLO_TYPES.includes(e.type))
+        .map(e => e.date)
+    );
+    
+    // Get unique dates for SW solo travel
+    const swSoloDates = new Set(
+      travelEvents
+        .filter(e => SW_SOLO_TYPES.includes(e.type))
+        .map(e => e.date)
+    );
+
+    // Days apart = days when either person is traveling solo (union of both sets)
+    const allSoloDates = new Set([...npSoloDates, ...swSoloDates]);
+    const daysApart = allSoloDates.size;
+
+    // Use 365 days as the year baseline
+    const daysInYear = 365;
+    const daysTogetherAtHome = daysInYear - daysApart;
+    const totalTogetherDays = daysTogetherAtHome + togetherTravel;
+    const togetherPct = Math.round((totalTogetherDays / daysInYear) * 100);
+
     return {
       npPersonal,
       swPersonal,
-      together,
+      togetherTravel,
       npWork,
       swWork,
       npTotal,
       swTotal,
-      workTotal,
-      personalTotal,
-      totalDays,
-      togetherPct,
       npWorkPct,
       swWorkPct,
+      daysApart,
+      daysTogetherAtHome,
+      totalTogetherDays,
+      togetherPct,
     };
   }, [travelEvents]);
 
@@ -121,7 +142,10 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
           </div>
           <Progress value={stats.togetherPct} className="h-2" />
           <p className="text-xs text-muted-foreground">
-            {stats.together} days together out of {stats.totalDays} total
+            {stats.totalTogetherDays} days together ({stats.daysTogetherAtHome} at home + {stats.togetherTravel} traveling)
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {stats.daysApart} days apart this year
           </p>
         </div>
 
