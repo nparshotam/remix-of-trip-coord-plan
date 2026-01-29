@@ -127,15 +127,17 @@ export const TravelAnalytics = ({ events }: TravelAnalyticsProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 2x2 Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Row 1 */}
         <TimeSinceTrip events={events} />
-        <TravelBalance events={events} />
         <MonthlyDistribution events={events} />
-      </div>
-
-      {/* Trip Breakdown Card */}
-      <Card className="w-full">
+        
+        {/* Row 2 */}
+        <TravelBalance events={events} />
+        
+        {/* Trip Breakdown Card - same size as others */}
+        <Card className="h-full">
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             {(selectedType || selectedTrip) && (
@@ -284,6 +286,7 @@ export const TravelAnalytics = ({ events }: TravelAnalyticsProps) => {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

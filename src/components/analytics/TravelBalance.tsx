@@ -41,6 +41,9 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
     // Work vs Personal balance
     const workPct = totalDays > 0 ? Math.round((workTotal / totalDays) * 100) : 0;
 
+    // Max for bar scaling
+    const maxIndividual = Math.max(npPersonal, swPersonal, npWork, swWork, 1);
+
     return {
       npPersonal,
       swPersonal,
@@ -54,39 +57,31 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
       totalDays,
       togetherPct,
       workPct,
+      maxIndividual,
     };
   }, [travelEvents]);
 
+  const BarRow = ({ label, value, color, max }: { label: string; value: number; color: string; max: number }) => (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span>{label}</span>
+        <span className="font-medium">{value} days</span>
+      </div>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <div 
+          className={`h-full ${color} transition-all`}
+          style={{ width: `${max > 0 ? (value / max) * 100 : 0}%` }}
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full">
+      <CardHeader className="pb-3">
         <CardTitle className="text-lg">Travel Balance</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Work vs Personal */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="flex items-center gap-1">
-              <Briefcase className="h-4 w-4" />
-              Work Travel
-            </span>
-            <span className="flex items-center gap-1">
-              Personal Travel
-              <User className="h-4 w-4" />
-            </span>
-          </div>
-          <div className="relative h-4 rounded-full bg-muted overflow-hidden">
-            <div 
-              className="absolute left-0 top-0 h-full bg-np-work transition-all"
-              style={{ width: `${stats.workPct}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{stats.workTotal} days ({stats.workPct}%)</span>
-            <span>{stats.personalTotal} days ({100 - stats.workPct}%)</span>
-          </div>
-        </div>
-
+      <CardContent className="space-y-4">
         {/* Together Time */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -100,45 +95,42 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
           </div>
           <Progress value={stats.togetherPct} className="h-2" />
           <p className="text-xs text-muted-foreground">
-            {stats.together} days traveling together out of {stats.totalDays} total travel days
+            {stats.together} days together out of {stats.totalDays} total
           </p>
         </div>
 
-        {/* Individual Breakdown */}
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-np-travel">NP Travel</p>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <span>Personal:</span>
-                <span className="font-medium">{stats.npPersonal} days</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Work:</span>
-                <span className="font-medium">{stats.npWork} days</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>+ Together:</span>
-                <span>{stats.together} days</span>
-              </div>
-            </div>
+        {/* Individual Breakdown with Bars */}
+        <div className="space-y-3 pt-2 border-t">
+          <p className="text-sm font-medium flex items-center gap-1">
+            <User className="h-4 w-4" />
+            Personal Travel
+          </p>
+          <div className="space-y-2 pl-2">
+            <BarRow label="NP Travel" value={stats.npPersonal} color="bg-np-travel" max={stats.maxIndividual} />
+            <BarRow label="SW Travel" value={stats.swPersonal} color="bg-sw-travel" max={stats.maxIndividual} />
           </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-sw-travel">SW Travel</p>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between">
-                <span>Personal:</span>
-                <span className="font-medium">{stats.swPersonal} days</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Work:</span>
-                <span className="font-medium">{stats.swWork} days</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>+ Together:</span>
-                <span>{stats.together} days</span>
-              </div>
-            </div>
+        </div>
+
+        <div className="space-y-3 pt-2 border-t">
+          <p className="text-sm font-medium flex items-center gap-1">
+            <Briefcase className="h-4 w-4" />
+            Work Travel
+          </p>
+          <div className="space-y-2 pl-2">
+            <BarRow label="NP Work" value={stats.npWork} color="bg-np-work" max={stats.maxIndividual} />
+            <BarRow label="SW Work" value={stats.swWork} color="bg-sw-work" max={stats.maxIndividual} />
+          </div>
+        </div>
+
+        {/* Totals */}
+        <div className="grid grid-cols-2 gap-4 pt-2 border-t text-center">
+          <div>
+            <p className="text-2xl font-bold">{stats.personalTotal}</p>
+            <p className="text-xs text-muted-foreground">Personal days</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold">{stats.workTotal}</p>
+            <p className="text-xs text-muted-foreground">Work days</p>
           </div>
         </div>
       </CardContent>
