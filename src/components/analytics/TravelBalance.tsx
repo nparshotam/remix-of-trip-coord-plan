@@ -3,7 +3,7 @@ import { CalendarEvent, EventType } from "@/types/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Users, Briefcase, User } from "lucide-react";
+import { Users, Briefcase, User, Home } from "lucide-react";
 
 interface TravelBalanceProps {
   events: CalendarEvent[];
@@ -15,6 +15,8 @@ const SW_SOLO_TYPES: EventType[] = ["sw-travel", "sw-work"];
 
 const isWorldCupEvent = (event: CalendarEvent) => 
   event.title.toLowerCase().includes("world cup");
+
+const DAYS_IN_YEAR = 365;
 
 export const TravelBalance = ({ events }: TravelBalanceProps) => {
   const travelEvents = useMemo(() => 
@@ -32,34 +34,30 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
     const npTotal = npPersonal + npWork;
     const swTotal = swPersonal + swWork;
     
-    // Work percentages for each person
-    const npWorkPct = npTotal > 0 ? Math.round((npWork / npTotal) * 100) : 0;
-    const swWorkPct = swTotal > 0 ? Math.round((swWork / swTotal) * 100) : 0;
+    // Percentages out of 365 days
+    const npWorkPct = (npWork / DAYS_IN_YEAR) * 100;
+    const npPersonalPct = (npPersonal / DAYS_IN_YEAR) * 100;
+    const swWorkPct = (swWork / DAYS_IN_YEAR) * 100;
+    const swPersonalPct = (swPersonal / DAYS_IN_YEAR) * 100;
 
-    // Calculate days apart (solo travel, not including "together" trips)
-    // Get unique dates for NP solo travel
+    // Get unique dates for solo travel
     const npSoloDates = new Set(
       travelEvents
         .filter(e => NP_SOLO_TYPES.includes(e.type))
         .map(e => e.date)
     );
     
-    // Get unique dates for SW solo travel
     const swSoloDates = new Set(
       travelEvents
         .filter(e => SW_SOLO_TYPES.includes(e.type))
         .map(e => e.date)
     );
 
-    // Days apart = days when either person is traveling solo (union of both sets)
     const allSoloDates = new Set([...npSoloDates, ...swSoloDates]);
     const daysApart = allSoloDates.size;
-
-    // Use 365 days as the year baseline
-    const daysInYear = 365;
-    const daysTogetherAtHome = daysInYear - daysApart;
+    const daysTogetherAtHome = DAYS_IN_YEAR - daysApart;
     const totalTogetherDays = daysTogetherAtHome + togetherTravel;
-    const togetherPct = Math.round((totalTogetherDays / daysInYear) * 100);
+    const togetherPct = Math.round((totalTogetherDays / DAYS_IN_YEAR) * 100);
 
     return {
       npPersonal,
@@ -70,7 +68,9 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
       npTotal,
       swTotal,
       npWorkPct,
+      npPersonalPct,
       swWorkPct,
+      swPersonalPct,
       daysApart,
       daysTogetherAtHome,
       totalTogetherDays,
@@ -78,50 +78,62 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
     };
   }, [travelEvents]);
 
-  const SplitBar = ({ 
+  const YearBar = ({ 
     label, 
     workValue, 
     personalValue, 
     workPct, 
+    personalPct,
     workColor, 
     personalColor 
   }: { 
     label: string; 
     workValue: number; 
     personalValue: number; 
-    workPct: number; 
+    workPct: number;
+    personalPct: number;
     workColor: string; 
     personalColor: string;
-  }) => (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <span className="font-medium">{label}</span>
-        <span className="text-muted-foreground text-xs">
-          {workValue + personalValue} days total
-        </span>
+  }) => {
+    const totalDays = workValue + personalValue;
+    const homeDays = DAYS_IN_YEAR - totalDays;
+    
+    return (
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="font-medium">{label}</span>
+          <span className="text-muted-foreground text-xs">
+            {totalDays} days away / {DAYS_IN_YEAR}
+          </span>
+        </div>
+        <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+          <div 
+            className={`h-full ${workColor} transition-all`}
+            style={{ width: `${workPct}%` }}
+          />
+          <div 
+            className={`h-full ${personalColor} transition-all`}
+            style={{ width: `${personalPct}%` }}
+          />
+          {/* Remaining is muted (home) */}
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Briefcase className="h-3 w-3" />
+            {workValue} work
+          </span>
+          <span className="flex items-center gap-1">
+            <User className="h-3 w-3" />
+            {personalValue} personal
+          </span>
+          <span className="flex items-center gap-1">
+            <Home className="h-3 w-3" />
+            {homeDays} home
+          </span>
+        </div>
       </div>
-      <div className="h-3 rounded-full bg-muted overflow-hidden flex">
-        <div 
-          className={`h-full ${workColor} transition-all`}
-          style={{ width: `${workPct}%` }}
-        />
-        <div 
-          className={`h-full ${personalColor} transition-all`}
-          style={{ width: `${100 - workPct}%` }}
-        />
-      </div>
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Briefcase className="h-3 w-3" />
-          {workValue} work
-        </span>
-        <span className="flex items-center gap-1">
-          {personalValue} personal
-          <User className="h-3 w-3" />
-        </span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Card className="h-full">
@@ -149,37 +161,42 @@ export const TravelBalance = ({ events }: TravelBalanceProps) => {
           </p>
         </div>
 
-        {/* NP Balance Bar */}
+        {/* NP Year Bar */}
         <div className="pt-2 border-t">
-          <SplitBar 
-            label="NP Travel" 
+          <YearBar 
+            label="NP" 
             workValue={stats.npWork} 
             personalValue={stats.npPersonal}
             workPct={stats.npWorkPct}
+            personalPct={stats.npPersonalPct}
             workColor="bg-np-work"
             personalColor="bg-np-travel"
           />
         </div>
 
-        {/* SW Balance Bar */}
+        {/* SW Year Bar */}
         <div className="pt-2 border-t">
-          <SplitBar 
-            label="SW Travel" 
+          <YearBar 
+            label="SW" 
             workValue={stats.swWork} 
             personalValue={stats.swPersonal}
             workPct={stats.swWorkPct}
+            personalPct={stats.swPersonalPct}
             workColor="bg-sw-work"
             personalColor="bg-sw-travel"
           />
         </div>
 
         {/* Legend */}
-        <div className="flex justify-center gap-4 pt-2 border-t text-xs text-muted-foreground">
+        <div className="flex justify-center gap-3 pt-2 border-t text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-np-work" /> Work
           </span>
           <span className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-np-travel" /> Personal
+          </span>
+          <span className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-muted" /> Home
           </span>
         </div>
       </CardContent>
