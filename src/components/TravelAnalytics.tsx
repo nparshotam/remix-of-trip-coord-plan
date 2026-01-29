@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MonthlyDistribution, TravelBalance, TimeSinceTrip } from "@/components/analytics";
 
 interface TravelAnalyticsProps {
   events: CalendarEvent[];
 }
 
-const TRAVEL_TYPES: EventType[] = ["np-travel", "sw-travel", "together"];
+const TRAVEL_TYPES: EventType[] = ["np-travel", "sw-travel", "together", "np-work", "sw-work"];
 
 const COLORS: Record<EventType, string> = {
   "np-travel": "hsl(var(--np-travel))",
@@ -19,6 +20,8 @@ const COLORS: Record<EventType, string> = {
   "blackout": "hsl(var(--blackout))",
   "us-holiday": "hsl(var(--us-holiday))",
   "sg-holiday": "hsl(var(--sg-holiday))",
+  "np-work": "hsl(var(--np-work))",
+  "sw-work": "hsl(var(--sw-work))",
 };
 
 interface TripGroup {
@@ -120,154 +123,164 @@ export const TravelAnalytics = ({ events }: TravelAnalyticsProps) => {
   const totalTrips = tripGroups.length;
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div className="flex items-center gap-2">
-          {(selectedType || selectedTrip) && (
-            <Button variant="ghost" size="icon" onClick={handleBack}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          )}
-          <CardTitle>
-            {selectedTrip 
-              ? selectedTrip.title 
-              : selectedType 
-                ? EVENT_LABELS[selectedType] 
-                : "Travel Analytics"}
-          </CardTitle>
-        </div>
-        {!selectedType && (
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <span>{totalTrips} trips</span>
-            <span>{totalDays} days</span>
-          </div>
-        )}
-      </CardHeader>
-      <CardContent>
-        {!selectedType && !selectedTrip && (
-          <div className="h-[300px]">
-            {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    onClick={(_, index) => handlePieClick(pieData[index])}
-                    className="cursor-pointer"
-                    label={({ name, value, trips }) => `${value}d / ${trips} trips`}
-                    labelLine={true}
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={COLORS[entry.type]}
-                        className="hover:opacity-80 transition-opacity"
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-background border rounded-lg p-2 shadow-lg">
-                            <p className="font-medium">{data.name}</p>
-                            <p className="text-sm text-muted-foreground">{data.value} days</p>
-                            <p className="text-sm text-muted-foreground">{data.trips} trips</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                No travel events found
-              </div>
+    <div className="space-y-6">
+      {/* Summary Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <TimeSinceTrip events={events} />
+        <TravelBalance events={events} />
+        <MonthlyDistribution events={events} />
+      </div>
+
+      {/* Trip Breakdown Card */}
+      <Card className="w-full">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            {(selectedType || selectedTrip) && (
+              <Button variant="ghost" size="icon" onClick={handleBack}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
             )}
+            <CardTitle>
+              {selectedTrip 
+                ? selectedTrip.title 
+                : selectedType 
+                  ? EVENT_LABELS[selectedType] 
+                  : "Trip Breakdown"}
+            </CardTitle>
           </div>
-        )}
-
-        {selectedType && !selectedTrip && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 mb-4">
-              <Badge 
-                className="text-white"
-                style={{ backgroundColor: COLORS[selectedType] }}
-              >
-                {filteredTrips.reduce((sum, t) => sum + t.days, 0)} total days
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                across {filteredTrips.length} trips
-              </span>
+          {!selectedType && (
+            <div className="flex gap-4 text-sm text-muted-foreground">
+              <span>{totalTrips} trips</span>
+              <span>{totalDays} days</span>
             </div>
-            {filteredTrips.map((trip, index) => (
-              <div
-                key={`${trip.title}-${trip.startDate}-${index}`}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                onClick={() => setSelectedTrip(trip)}
-              >
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">{trip.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(trip.startDate)}
-                      {trip.days > 1 && ` - ${formatDate(trip.endDate)}`}
-                    </p>
-                  </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          {!selectedType && !selectedTrip && (
+            <div className="h-[300px]">
+              {pieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                      onClick={(_, index) => handlePieClick(pieData[index])}
+                      className="cursor-pointer"
+                      label={({ name, value, trips }) => `${value}d / ${trips} trips`}
+                      labelLine={true}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[entry.type]}
+                          className="hover:opacity-80 transition-opacity"
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-background border rounded-lg p-2 shadow-lg">
+                              <p className="font-medium">{data.name}</p>
+                              <p className="text-sm text-muted-foreground">{data.value} days</p>
+                              <p className="text-sm text-muted-foreground">{data.trips} trips</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  No travel events found
                 </div>
-                <Badge variant="secondary">{trip.days} days</Badge>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {selectedTrip && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Badge 
-                className="text-white"
-                style={{ backgroundColor: COLORS[selectedTrip.type] }}
-              >
-                {EVENT_LABELS[selectedTrip.type]}
-              </Badge>
-              <Badge variant="secondary">{selectedTrip.days} days</Badge>
+              )}
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  {formatDate(selectedTrip.startDate)}
-                  {selectedTrip.days > 1 && ` - ${formatDate(selectedTrip.endDate)}`}
+          )}
+
+          {selectedType && !selectedTrip && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-4">
+                <Badge 
+                  className="text-white"
+                  style={{ backgroundColor: COLORS[selectedType] }}
+                >
+                  {filteredTrips.reduce((sum, t) => sum + t.days, 0)} total days
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  across {filteredTrips.length} trips
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{selectedTrip.title}</span>
+              {filteredTrips.map((trip, index) => (
+                <div
+                  key={`${trip.title}-${trip.startDate}-${index}`}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                  onClick={() => setSelectedTrip(trip)}
+                >
+                  <div className="flex items-center gap-3">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{trip.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(trip.startDate)}
+                        {trip.days > 1 && ` - ${formatDate(trip.endDate)}`}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary">{trip.days} days</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedTrip && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Badge 
+                  className="text-white"
+                  style={{ backgroundColor: COLORS[selectedTrip.type] }}
+                >
+                  {EVENT_LABELS[selectedTrip.type]}
+                </Badge>
+                <Badge variant="secondary">{selectedTrip.days} days</Badge>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {formatDate(selectedTrip.startDate)}
+                    {selectedTrip.days > 1 && ` - ${formatDate(selectedTrip.endDate)}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span>{selectedTrip.title}</span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">All dates:</p>
+                <div className="flex flex-wrap gap-1">
+                  {selectedTrip.dates.sort().map(date => (
+                    <Badge key={date} variant="outline" className="text-xs">
+                      {formatDate(date)}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="mt-4">
-              <p className="text-sm font-medium mb-2">All dates:</p>
-              <div className="flex flex-wrap gap-1">
-                {selectedTrip.dates.sort().map(date => (
-                  <Badge key={date} variant="outline" className="text-xs">
-                    {formatDate(date)}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };

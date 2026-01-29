@@ -64,6 +64,8 @@ export default {
         "us-holiday": "hsl(var(--us-holiday))",
         "sg-holiday": "hsl(var(--sg-holiday))",
         "world-cup": "hsl(var(--world-cup))",
+        "np-work": "hsl(var(--np-work))",
+        "sw-work": "hsl(var(--sw-work))",
       },
       borderRadius: {
         lg: "var(--radius)",
