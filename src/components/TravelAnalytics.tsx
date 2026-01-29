@@ -13,6 +13,9 @@ interface TravelAnalyticsProps {
 
 const TRAVEL_TYPES: EventType[] = ["np-travel", "sw-travel", "together", "np-work", "sw-work"];
 
+const isWorldCupEvent = (event: CalendarEvent) => 
+  event.title.toLowerCase().includes("world cup");
+
 const COLORS: Record<EventType, string> = {
   "np-travel": "hsl(var(--np-travel))",
   "sw-travel": "hsl(var(--sw-travel))",
@@ -37,9 +40,9 @@ export const TravelAnalytics = ({ events }: TravelAnalyticsProps) => {
   const [selectedType, setSelectedType] = useState<EventType | null>(null);
   const [selectedTrip, setSelectedTrip] = useState<TripGroup | null>(null);
 
-  // Filter to only travel types
+  // Filter to only travel types, excluding World Cup events
   const travelEvents = useMemo(() => 
-    events.filter(e => TRAVEL_TYPES.includes(e.type)),
+    events.filter(e => TRAVEL_TYPES.includes(e.type) && !isWorldCupEvent(e)),
     [events]
   );
 

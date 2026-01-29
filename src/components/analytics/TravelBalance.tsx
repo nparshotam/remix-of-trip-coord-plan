@@ -13,9 +13,12 @@ const TRAVEL_TYPES: EventType[] = ["np-travel", "sw-travel", "together", "np-wor
 const WORK_TYPES: EventType[] = ["np-work", "sw-work"];
 const PERSONAL_TYPES: EventType[] = ["np-travel", "sw-travel", "together"];
 
+const isWorldCupEvent = (event: CalendarEvent) => 
+  event.title.toLowerCase().includes("world cup");
+
 export const TravelBalance = ({ events }: TravelBalanceProps) => {
   const travelEvents = useMemo(() => 
-    events.filter(e => TRAVEL_TYPES.includes(e.type)),
+    events.filter(e => TRAVEL_TYPES.includes(e.type) && !isWorldCupEvent(e)),
     [events]
   );
 
