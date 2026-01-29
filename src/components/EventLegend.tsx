@@ -5,6 +5,8 @@ export const EventLegend = () => {
     "np-travel",
     "sw-travel",
     "together",
+    "np-work",
+    "sw-work",
     "blackout",
     "us-holiday",
     "sg-holiday",

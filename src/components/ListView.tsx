@@ -124,6 +124,8 @@ export const ListView = ({ events, onDeleteEvent, onDateClick, onDateRangeSelect
         "blackout": [],
         "us-holiday": [],
         "sg-holiday": [],
+        "np-work": [],
+        "sw-work": [],
       };
     }
     eventsByDate[event.date][event.type].push(event);
@@ -133,6 +135,8 @@ export const ListView = ({ events, onDeleteEvent, onDateClick, onDateRangeSelect
     { type: "np-travel", label: "NP" },
     { type: "sw-travel", label: "SW" },
     { type: "together", label: "Together" },
+    { type: "np-work", label: "NP Work" },
+    { type: "sw-work", label: "SW Work" },
     { type: "blackout", label: "Blackout" },
     { type: "us-holiday", label: "US Holiday" },
     { type: "sg-holiday", label: "SG Holiday" },

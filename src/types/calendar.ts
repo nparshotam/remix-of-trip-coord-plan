@@ -4,7 +4,9 @@ export type EventType =
   | "together" 
   | "blackout" 
   | "us-holiday" 
-  | "sg-holiday";
+  | "sg-holiday"
+  | "np-work"
+  | "sw-work";
 
 export interface CalendarEvent {
   id: string;
@@ -21,6 +23,8 @@ export const EVENT_LABELS: Record<EventType, string> = {
   "blackout": "Blackout Dates",
   "us-holiday": "US Public Holiday",
   "sg-holiday": "Singapore Public Holiday",
+  "np-work": "NP Work",
+  "sw-work": "SW Work",
 };
 
 export const EVENT_COLORS: Record<EventType, string> = {
@@ -30,4 +34,6 @@ export const EVENT_COLORS: Record<EventType, string> = {
   "blackout": "bg-blackout",
   "us-holiday": "bg-us-holiday",
   "sg-holiday": "bg-sg-holiday",
+  "np-work": "bg-np-work",
+  "sw-work": "bg-sw-work",
 };

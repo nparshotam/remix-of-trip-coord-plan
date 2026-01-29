@@ -86,6 +86,8 @@ export type Database = {
         | "blackout"
         | "us-holiday"
         | "sg-holiday"
+        | "np-work"
+        | "sw-work"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -220,6 +222,8 @@ export const Constants = {
         "blackout",
         "us-holiday",
         "sg-holiday",
+        "np-work",
+        "sw-work",
       ],
     },
   },
