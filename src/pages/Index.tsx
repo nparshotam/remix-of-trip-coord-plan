@@ -7,9 +7,10 @@ import { EventLegend } from "@/components/EventLegend";
 import { ListView } from "@/components/ListView";
 import { YearView } from "@/components/YearView";
 import { PlacesSidebar } from "@/components/PlacesSidebar";
+import { TravelAnalytics } from "@/components/TravelAnalytics";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, List, ChevronLeft, ChevronRight, Loader2, CalendarDays } from "lucide-react";
+import { Calendar, List, ChevronLeft, ChevronRight, Loader2, CalendarDays, PieChart } from "lucide-react";
 import { toast } from "sonner";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
@@ -26,7 +27,7 @@ const Index = () => {
   const [selectedDateRange, setSelectedDateRange] = useState<{ start: string; end?: string; type?: EventType }>({
     start: "",
   });
-  const [viewMode, setViewMode] = useState<"calendar" | "list" | "year">("calendar");
+  const [viewMode, setViewMode] = useState<"calendar" | "list" | "year" | "analytics">("calendar");
   const [rangeMode, setRangeMode] = useState(false);
 
   // Find consecutive events (within 1 day gap) with same title and type
@@ -280,6 +281,14 @@ const Index = () => {
               <List className="mr-2 h-4 w-4" />
               List
             </Button>
+            <Button
+              variant={viewMode === "analytics" ? "default" : "outline"}
+              onClick={() => setViewMode("analytics")}
+              size="sm"
+            >
+              <PieChart className="mr-2 h-4 w-4" />
+              Analytics
+            </Button>
           </div>
         </header>
 
@@ -338,6 +347,10 @@ const Index = () => {
             onDateClick={handleDateClick}
             onDateRangeSelect={handleDateRangeSelect}
           />
+        )}
+
+        {viewMode === "analytics" && (
+          <TravelAnalytics events={events} />
         )}
 
         <EventModal
