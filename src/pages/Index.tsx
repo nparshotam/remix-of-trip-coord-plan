@@ -19,7 +19,7 @@ const AVAILABLE_YEARS = [2026, 2027, 2028];
 const Index = () => {
   const { events, loading, addEvents, deleteEvent, updateEvent } = useCalendarEvents();
   const [selectedYear, setSelectedYear] = useState(2026);
-  const [currentMonth, setCurrentMonth] = useState(0); // 0 = January
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [modalOpen, setModalOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
